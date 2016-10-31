@@ -6,7 +6,7 @@ import re
 import os
 
 inp_path = '/home/avikbasu/WORK/Economics_of_Innovation/TimeWise'
-out_path = '/home/avikbasu/WORK/Economics_of_Innovation/ResearchFall16/doc_IDs'
+out_path = '/home/avikbasu/WORK/Economics_of_Innovation/ResearchFall16/paper_IDs'
 
 def map_doc_id(input_filename, output_filename):
     #df = pd.read_csv(os.path.join(dir_path, input_filename),
@@ -21,7 +21,7 @@ def map_doc_id(input_filename, output_filename):
             i = 0
             for row in reader:
                 m = weblink_patt.search(row[15])
-                print i
+                #print i
                 i += 1
                 if m:
                     out_file.write(m.group(0) + '\n')
