@@ -9,7 +9,7 @@ def convert_gamma_to_prob(gamma_file, output_path=None):
     df = pd.read_csv(gamma_file, delim_whitespace=True, header=None)
     df = df.apply(lambda x: x/np.sum(x), axis=1, raw=True)
     probs = df.values
-    return np.argsort(-probs, axis=1)
+    return np.argsort(-probs, axis=1), -np.sort(-probs, axis=1)
 
 def find_doc_topics_single(gamma_file, paper_id_file, output_file):
     output_dir = '/'.join(output_file.split('/')[:-1])
@@ -40,23 +40,28 @@ def find_doc_topics_single(gamma_file, paper_id_file, output_file):
 def find_doc_topics(gamma_file, paper_id_file, output_file, n=3):
     n = int(n)
     output_dir = '/'.join(output_file.split('/')[:-1])
-    doc_topics = convert_gamma_to_prob(gamma_file)[:,:n]
+    doc_topics, probs = convert_gamma_to_prob(gamma_file)
+    doc_topics, probs = doc_topics[:,:n], probs[:,:n]
 
     num_docs = doc_topics.shape[0]
     paper_ids = np.loadtxt(paper_id_file, dtype=int)
 
     topic_doc_map = defaultdict(list)
 
+    count = 0
     for i in xrange(num_docs):
         for j in range(n):
-            topic_doc_map[doc_topics[i,j]].append(paper_ids[i])
-    
+            if probs[i,j] < 0.005:
+                count += 1
+                continue
+            topic_doc_map[doc_topics[i,j]].append((paper_ids[i], probs[i,j]))
+
     with open(output_file, 'w') as outfile:
-        outfile.write('TOPIC ID' + '\t' + 'PAPER_ID' + '\n')
+        outfile.write('TOPIC ID' + '\t' + 'PAPER_ID' + '\t' + 'PROBABILITY' + '\n')
         for topic in topic_doc_map: 
             print topic
-            for paper in topic_doc_map[topic]:
-                outfile.write(str(topic) + '\t' + str(paper) + '\n')
+            for paper, prob in topic_doc_map[topic]:
+                outfile.write(str(topic) + '\t' + str(paper) + '\t' + "{0:.5f}".format(prob) + '\n')
 
 
 if (__name__ == '__main__'):
